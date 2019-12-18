@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="author" content="Sim">
+    <link rel="icon" href="/img/soro.ico" type="image/x-icon"/>
+    <title>One Moment</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script  src="/layui/layui.js" ></script>
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script  src="/js/common.js" ></script>
+    <link rel="stylesheet" href="/layui/css/layui.css" media="all">
+    <link rel="stylesheet" href="/css/baisc.css"  >
+</head>
+<body >
+    <div class="upBody">
+        <div class="layui-input-inline">
+            <input type="text" class="layui-input" name="date" required lay-verify="required" id ="date">
+        </div>
+        <label class="layui-form-label" >
+            <i class="layui-icon layui-icon-search" style="font-size: 30px;" id="search"></i>
+        </label>
+        <label class="layui-form-label" style="float:right">
+            <i class="layui-icon layui-icon-edit" style="font-size: 30px;" id="add"></i>
+        </label>
+    </div>
+
+    <hr class="layui-bg-blue ">
+    <fieldset class="layui-elem-field upBody">
+        <div class="layui-tab">
+            <legend>
+                <ul class="layui-tab-title" >
+                    <li class="layui-this">
+                        <i class="layui-icon layui-icon-read" style="font-size: 30px;" ></i>
+                    </li>
+                    <li id="coutns" style="font-size: 22px"></li>
+                </ul>
+            </legend>
+            <div class="layui-field-box">
+
+                <ul class="layui-timeline" id="timelineDiv">
+
+
+                </ul>
+            </div>
+        </div>
+    </fieldset>
+
+    <ul class="layui-fixbar">
+        <!--        <li class="layui-icon" lay-type="bar1" style="" ></li>-->
+        <li class="layui-icon layui-fixbar-top" lay-type="top" style="display: list-item;" onclick="toTop()"></li>
+    </ul>
+
+
+    <div id="outerdiv" style="position:fixed;top:0;left:0;background:rgba(0,0,0,0.7);z-index:2;width:100%;height:100%;display:none;">
+        <div id="innerdiv" style="position:absolute;">
+            <img id="bigimg" style="border:5px solid #fff;" src="" />
+        </div>
+    </div>
+
+<script>
+    layui.use('laydate', function(){
+        var laydate = layui.laydate;
+
+        //执行一个laydate实例
+        laydate.render({
+            elem: '#date' //指定元素
+            ,value: new Date()
+            ,theme: 'grid'
+            ,mark: {
+                '0-01-28': '生日'
+                ,'0-02-02': '纪念日'
+            }
+        });
+    });
+
+    layui.use('element', function(){
+        var element = layui.element;
+
+        //…
+    });
+
+    // layui.use('flow', function(){
+    //     var flow = layui.flow;
+    //     //当你执行这样一个方法时，即对页面中的全部带有lay-src的img元素开启了懒加载（当然你也可以指定相关img）
+    //     flow.lazyimg();
+    // });
+
+    $("#search").on("click",function(){
+        getDetails();
+    });
+    $("#add").on("click",function(){
+        $(location).attr('href', '/hp/add');
+    });
+    $(function () {
+            getDetails();
+        });
+
+    
+    function getDetails() {
+        var dateV = $("#date").val();
+        console.log(dateV);
+        var sendd = {};
+        sendd.date = dateV;
+
+        $.ajax({
+            url:"/hp/details",
+            data:JSON.stringify( sendd),
+            dataType:'JSON',
+            contentType : "application/json",
+            type:'POST',
+            success:function(res){
+                console.log(res);
+                $('#coutns').html(res.message);
+                if (res.state==1){
+                    $('#timelineDiv').html("");
+                    $.each(res.data,function(index,value){
+                        var notess = value;
+                        var imges="";
+                        console.log("notess.urls="+notess.urls);
+                        if (notess.urls!=null) {
+                            $.each(notess.urls, function (index, value) {
+                                var bbaes = value;
+                                imges += " <div class=\"layui-form-item\">\n" +
+                                    "  <img class=\"upPics\" onclick=\"showBigPic(this)\" src='" + bbaes + "'>" +
+                                    "   </div>";
+
+                            });
+                        }
+                        console.log("imges="+imges);
+                        $('#timelineDiv').append("<li class=\"layui-timeline-item\">" +
+                            "<i class=\"layui-icon layui-timeline-axis\">&#xe63f;</i>\n" +
+                            "                                                <div class=\"layui-timeline-content layui-text\">\n" +
+                            "                                                    <h3 class=\"layui-timeline-title\">"+notess.time+" </h3>\n" +
+                            "                                                    <p>"+notess.note+"<br>\n" +
+                            "\n" + imges+
+                            "\n" +
+                            "                                                    </p>\n" +
+                            "                                                </div>\n" +
+                            "                                            </li>\n"
+                        );
+
+                    });
+                }else if (res.state==0){
+                    $('#timelineDiv').html("");
+                }
+            },
+            error:function (data) {
+
+            }
+        }) ;
+    }
+
+
+
+</script>
+
+</body>
+</html>

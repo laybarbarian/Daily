@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="author" content="Sim">
+    <link rel="icon" href="/img/soro.ico" type="image/x-icon"/>
+    <title>writing</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script  src="/layui/layui.js" ></script>
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <link rel="stylesheet" href="/layui/css/layui.css" media="all">
+    <link rel="stylesheet" href="/css/baisc.css"  >
+</head>
+<body>
+    <div class="upBody">
+        <div class="addUpDiv">
+            <label class="layui-form-label" style="float:right">
+                <i class="layui-icon layui-icon-home" style="font-size: 30px;" id="home"></i>
+            </label>
+        </div>
+
+        <form class="layui-form" action="">
+
+            <div class="layui-form-item layui-form-text">
+                <label class="layui-form-label" style="text-align: left;width: 20%">
+                    <i class="layui-icon layui-icon-release" style="font-size: 30px;"></i>
+                </label>
+                <div class="layui-input-block" style="margin-left: 0%;">
+                    <textarea name="note" placeholder="" class="layui-textarea"></textarea>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label" id="addPics" style="text-align: left;width: 20%">
+                    <i class="layui-icon layui-icon-camera" style="font-size: 30px;"></i>
+                </label>
+            </div>
+            <div class="layui-collapse">
+                <div class="layui-colla-item">
+                    <h2 class="layui-colla-title">Pics</h2>
+                    <div class="layui-colla-content layui-show" id="pics">
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="layui-form-item ">
+                <div class=layui-input-inline">
+                    <button class="layui-btn layui-btn-radius layui-btn-normal" lay-submit lay-filter="add" >提交</button>
+                    <button type="reset" class="layui-btn layui-btn-radius layui-btn-warm" id="reset">重置</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <ul class="layui-fixbar">
+<!--        <li class="layui-icon" lay-type="bar1" style="" ></li>-->
+        <li class="layui-icon layui-fixbar-top" lay-type="top" style="display: list-item;" onclick="toTop()"></li>
+    </ul>
+
+    <div id="outerdiv" style="position:fixed;top:0;left:0;background:rgba(0,0,0,0.7);z-index:2;width:100%;height:100%;display:none;">
+        <div id="innerdiv" style="position:absolute;">
+            <img id="bigimg" style="border:5px solid #fff;" src="" />
+        </div>
+    </div>
+
+<script>
+    var isSend = 0;
+
+    layui.use('util', function(){
+        var util = layui.util;
+
+        //执行
+        util.fixbar({
+            bar1: true
+            ,top:true
+            ,click: function(type){
+                console.log(type);
+                if(type === 'bar1'){
+                    alert('点击了bar1');
+                }
+            }
+        });
+
+    });
+
+    // layui.use('flow', function(){
+    //     var flow = layui.flow;
+    //     //当你执行这样一个方法时，即对页面中的全部带有lay-src的img元素开启了懒加载（当然你也可以指定相关img）
+    //     flow.lazyimg();
+    // });
+
+    layui.use('upload', function(){
+        var upload = layui.upload;
+
+        //执行实例
+        var uploadInst = upload.render({
+            elem: '#addPics' //绑定元素
+            ,url: '/hp/upPics' //上传接口
+            ,size:0
+            ,acceptMime:'image/*'
+            ,accept: 'images'
+            ,multiple: true   //多文件
+            ,done: function(res){
+                console.log(res);
+                if (res.state==0){
+                    return;
+                }
+                $('#pics').append('<div class="layui-form-item"><img onclick="showBigPic(this)" src="http://laybarbarian.cn/' + res.message + '" class="upPics">' +
+                    '<label onclick="deletePicRow(this)">\n' +
+                    '                <i class="layui-icon layui-icon-delete" style="font-size: 30px;"></i>\n' +
+                    '            </label>' +
+                    '</div>')
+            }
+            ,error: function(){
+                //请求异常回调
+            }
+        });
+    });
+
+    layui.use(['layer', 'form'], function(){
+        var layer = layui.layer
+            ,form = layui.form;
+        // layer.msg('OK');
+        form.on('submit(add)', function(data){
+            if (isSend==1){
+                return false;
+            }
+            var pisc ={};
+            var i = 1;
+            $('.upPics').each(function () {
+                pisc[i]=$(this).attr("src");
+                i++;
+            });
+            data.field.pics =  JSON.stringify( pisc) ;
+            isSend=1;
+            $.ajax({
+                url:"/hp/write",
+                data:JSON.stringify( data.field),
+                dataType:'JSON',
+                contentType : "application/json",
+                type:'POST',
+                success:function(res){
+                    console.log(res);
+                    if (res.state==0){
+
+
+                    }else if (res.state==1){
+                        $(location).attr('href', '/hp/home');
+                    }
+                },
+                error:function (data) {
+                    console.log(data);
+                }
+            }) ;
+            return false; //阻止表单跳转。如果需要表单跳转，去掉这段即可。
+        });
+
+        return false; //阻止表单跳转。如果需要表单跳转，去掉这段即可。
+        });
+
+    layui.use('element', function(){
+        var element = layui.element;
+
+        //…
+    });
+
+    $("#reset").on("click",function(){
+        console.log("reset");
+        $('#pics').html("");
+    });
+
+    $("#home").on("click",function(){
+        $(location).attr('href', '/hp/home');
+    });
+
+    function deletePicRow(e) {
+        e.parentElement.remove();
+    }
+
+    function toTop() {
+        $("html,body").animate({
+            scrollTop:0
+        }, 500);
+    }
+
+    function showBigPic(e) {
+        var src = e.src;
+        imgShow("#outerdiv", "#innerdiv", "#bigimg", src);
+    }
+
+    function imgShow(outerdiv, innerdiv, bigimg, src){
+        $(bigimg).attr("src", src);//设置#bigimg元素的src属性
+
+        /*获取当前点击图片的真实大小，并显示弹出层及大图*/
+        $("<img/>").attr("src", src).load(function(){
+            var windowW = $(window).width();//获取当前窗口宽度
+            var windowH = $(window).height();//获取当前窗口高度
+            var realWidth = this.width;//获取图片真实宽度
+            var realHeight = this.height;//获取图片真实高度
+            var imgWidth, imgHeight;
+            var scale = 0.8;//缩放尺寸，当图片真实宽度和高度大于窗口宽度和高度时进行缩放
+
+            if(realHeight>windowH*scale) {//判断图片高度
+                imgHeight = windowH*scale;//如大于窗口高度，图片高度进行缩放
+                imgWidth = imgHeight/realHeight*realWidth;//等比例缩放宽度
+                if(imgWidth>windowW*scale) {//如宽度扔大于窗口宽度
+                    imgWidth = windowW*scale;//再对宽度进行缩放
+                }
+            } else if(realWidth>windowW*scale) {//如图片高度合适，判断图片宽度
+                imgWidth = windowW*scale;//如大于窗口宽度，图片宽度进行缩放
+                imgHeight = imgWidth/realWidth*realHeight;//等比例缩放高度
+            } else {//如果图片真实高度和宽度都符合要求，高宽不变
+                imgWidth = realWidth;
+                imgHeight = realHeight;
+            }
+            $(bigimg).css("width",imgWidth);//以最终的宽度对图片缩放
+
+            var w = (windowW-imgWidth)/2;//计算图片与窗口左边距
+            var h = (windowH-imgHeight)/2;//计算图片与窗口上边距
+            $(innerdiv).css({"top":h, "left":w});//设置#innerdiv的top和left属性
+            $(outerdiv).fadeIn("fast");//淡入显示#outerdiv及.pimg
+        });
+
+        $(outerdiv).click(function(){//再次点击淡出消失弹出层
+            $(this).fadeOut("fast");
+        });
+    }
+
+</script>
+
+</body>
+</html>
