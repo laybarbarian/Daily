@@ -18,7 +18,7 @@ public class SFTPUtil {
     private int port = 22;
 
     private String username = "root";
-    private String password = "Laybarbarian~1";
+    private String password = "123456";
 
     private String baseroot = "/data/";
 
